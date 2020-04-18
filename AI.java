@@ -1,9 +1,10 @@
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
-public class AIPlayer extends Player{
+public class AI extends Player{
 
-    public AIPlayer(boolean player1){
+    public AI(boolean player1){
         super(player1);
     }
 
@@ -40,74 +41,113 @@ public class AIPlayer extends Player{
 
     //getVal methdod (returns a num)
 
-
-    //genStates method (back tracking)
-    public ArrayList<State> genStates(State state, Boolean isP1) {
-        //iget values
-        Square[][] curGrid = state.grid;
+    public void genStates(State state, Boolean isP1) {
+        Square[][] grid = state.grid;
         HashMap<String, Integer> p1extra = state.extraPiecesP1;
         HashMap<String, Integer> p2extra = state.extraPiecesP2;
-
-        ArrayList<State> finalList = new ArrayList<State>();
-
+        
         //iterate through grid
         for (int i = 0; i < grid.length; i++) {
             for (int j = 0; j < grid[i].length; j++) {
                 //if starting position is blank
                 if (grid[i][j].getPieceRep().equals(".")) {
                     //if isP1:
+                    if (isP1) {
                         //iterate through P1's stuff
-                        //make pieceRep a piece
-                        //place piece on grid
-                        //rem pieceRep from new piece1list
-                        //add grid, p1, p2 to state
-                        //add pieceRep to p1
-                        //set grid spot to default
-                    //else
-                        //iterate through P2's stuff
-                        //make pieceRep a piece
-                        //place piece on grid
-                        //rem pieceRep from new p2
-                        //add grid, p1, p2 to state
-                        //add pieceRep to p2
-                        //set grid spot to default
+                        Set<String> keySet = p1extra.keySet(); 
+                        ArrayList<String> listOfKeys = new ArrayList<String>(keySet);
+
+                        for (int ind = 0; ind < listOfKeys.size(); ind++) {
+                            //make pieceRep a piece
+                            String pieceRep = listOfKeys.get(ind);
+                            Piece newPiece = pieceFromRep(pieceRep);
+                            //place piece on grid
+                            grid[i][j].setPiece(newPiece);
+                            p1extra = remPiece(p1extra, pieceRep);
+                            //PRINT!!
+                            printStuff(grid);
+                            State curState = new State(grid, p1extra, p2extra);
+                            curState.valState();
+                            //revert
+                            p1extra = addingPiece(p1extra, pieceRep);
+                            Piece defPiece = new Piece(true, ".");
+                            grid[i][j].setPiece(defPiece);
+                        }
+                    }
+                    else {
+                        //repeat for p2
+                        Set<String> keySet = p2extra.keySet(); 
+                        ArrayList<String> listOfKeys = new ArrayList<String>(keySet);
+
+                        for (int ind = 0; ind < listOfKeys.size(); ind++) {
+                            String pieceRep = listOfKeys.get(ind);
+                            Piece newPiece = pieceFromRep(pieceRep);
+                            grid[i][j].setPiece(newPiece);
+                            p2extra = remPiece(p2extra, pieceRep);
+                            //do whatever with state here!!!!!!!!
+                            p2extra = addingPiece(p2extra, pieceRep);
+                            Piece defPiece = new Piece(true, ".");
+                            grid[i][j].setPiece(defPiece);
+                        }
+                    }
                 }
                 //if starting position is player's piece
-                else if (grid[i][j].getPiece.player1 == isP1) {
+                else if (grid[i][j].getPiece().player1 == isP1) {
                     Piece curPiece = grid[i][j].getPiece();
                     ArrayList<Point> allPos = curPiece.getAllPositions(j, i);
                     //iterate through Array List
                     for (int k = 0; k < allPos.size(); k++) {
                         Point curPos = allPos.get(k);
-                        Piece endPiece = grid[curPos.y][curPos.x];
+                        Piece endPiece = grid[curPos.y][curPos.x].getPiece();
                         //if ending position is blank
                         if (endPiece.getRep().equals(".")) {
                             //new grid
-                            Square[][] newGrid = grid; 
-                            newGrid[curPos.y][curPos.x] = curPiece;
-                            newGrid[i][j] = curPiece;
-                            State newState = State(newGrid, p1extra, p2extra);
-                            finalList.add(newState);
+                            grid[curPos.y][curPos.x].setPiece(curPiece);
+                            Piece defPiece = new Piece(true, ".");
+                            grid[i][j].setPiece(defPiece);
+                            State newState = new State(grid, p1extra, p2extra);
+                            newState.valState();
+                            printStuff(grid);
+                            grid[i][j].setPiece(curPiece);
+                            grid[curPos.y][curPos.x].setPiece(endPiece);
                         }
                         //if ending position is a piece of a diff player
-
-                    } 
-                        //elif player1 is diff:
-                            //grid[end][end] = curPiece
-                            //grid[now] = def piece
-                            //change player of endPiece
-                            //newL1
-                            //newL2
-                            //if end piece is P1 
-                                //add to newL1
-                            //else 
-                                //add to newL2
+                        else if (endPiece.player1 != isP1) {
+                            grid[curPos.y][curPos.x].setPiece(curPiece);
+                            Piece defPiece = new Piece(true, ".");
+                            grid[i][j].setPiece(defPiece);
+                            endPiece.setPlayer(isP1);
+                            //if end piece is P1 add to newExtra1
+                            if (endPiece.player1)
+                                addingPiece(p1extra, endPiece.getRep());
+                            else 
+                                addingPiece(p2extra, endPiece.getRep());
                             //ADD STATE
+                            State newState = new State(grid, p1extra, p2extra);
+                            newState.valState();
+                            printStuff(grid);
                             //change player of endpiece
-                            //grid[end][end] = endPiece
-                            //grid[now] = curPiece
+                            if (endPiece.player1)
+                                remPiece(p1extra, endPiece.getRep());
+                            else 
+                                remPiece(p2extra, endPiece.getRep());
+                            endPiece.setPlayer(!isP1);
+                            grid[curPos.y][curPos.x].setPiece(endPiece);
+                            grid[i][j].setPiece(curPiece);
+                        }
+                    } 
                 }
             }
         }
+    }
+
+    public void printStuff(Square[][] grid) {
+        for (int y = 0; y < 4; y++) {
+            for (int x = 0; x < 3; x ++) {
+                System.out.print(grid[y][x].getPieceRep()+ " ");
+            }
+            System.out.print('\n');
+        }
+        System.out.print('\n');
     }
 }
