@@ -34,12 +34,7 @@ public class Board {
     }
 
     public void displayBoard(Player p1, Player p2) {
-        //
-        State myState = new State(grid, p1.getPieces(), p2.getPieces());
-        myState.valState();
-
-        //    
-        System.out.println("Type 'help' if you would like to see instructions.\n");
+         
         int num = 1;
         System.out.println("    a b c\n");
         
