@@ -1,11 +1,27 @@
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Set;
+import java.util.Scanner;
 
 public class AI extends Player{
 
-    public AI(boolean player1){
-        super(player1);
+    public int bestValue;
+    public int xStart;
+    public int yStart;
+    public int xEnd;
+    public int yEnd;
+    public String finalRep;
+    public int level;
+
+    public AI(boolean player1, boolean human){
+        super(player1, human);
+        this.bestValue = 0;
+        this.xStart = -1;
+        this.yStart = -1;
+        this.xEnd = -1;
+        this.yEnd = -1;
+        this.finalRep = ".";
+        this.level = 1;
     }
 
     public HashMap<String, Integer> addingPiece(HashMap<String, Integer> pExtra, String killedPieceRep){
@@ -30,18 +46,75 @@ public class AI extends Player{
             return pExtra;
     }
 
-    //next move method
-        //create state
-        //for each state in genState(state)
-            //getVal of state
-        //res = state w highest value
+    @Override
+    public void setLevel(String level) {
+        if (level.equals("3")) {
+            this.level = 3;
+        }
+        else if (level.equals("2")) {
+            this.level = 2;
+        }
+        else {
+            this.level = 1;
+        }
+    }
 
-        //set board to state.board
-        //update AI extra layers 
+    @Override
+    public void nextMove(Board board, Scanner scanner, HashMap<String, Integer> extra1, HashMap<String, Integer> extra2) {
+        
+        State testState = new State(board.grid, extra1, extra2);
+        int best = genStates(level, testState, player1);
 
-    //getVal methdod (returns a num)
+        System.out.println(xStart);
+        System.out.println(yStart);
+        System.out.println(xEnd);
+        System.out.println(yEnd);
+        System.out.println(finalRep);
+        if (xStart == -1 && yStart == -1) {
+            //remove finalRep from extra pieces
+            extraPieces = remPiece(extraPieces, finalRep);
+            //make finalRep a piece put it on board end
+            board.grid[yEnd][xEnd].setPiece(pieceFromRep(finalRep));
+            return;
+        }
+        //get end piece
+        Piece endPiece = board.grid[yEnd][xEnd].getPiece();
 
-    public void genStates(State state, Boolean isP1) {
+        if (endPiece.rep.equals(".")) {    
+            Piece defPiece = new Piece(true, ".");
+            board.grid[yStart][xStart].setPiece(defPiece);
+            board.grid[yEnd][xEnd].setPiece(pieceFromRep(finalRep));
+        }
+        else {
+            endPiece.setPlayer(player1);
+            addPiece(endPiece.rep);
+            Piece defPiece = new Piece(true, ".");
+            board.grid[yStart][xStart].setPiece(defPiece);
+            board.grid[yEnd][xEnd].setPiece(pieceFromRep(finalRep));
+        }
+
+        if (endPiece.rep.equals("L") || endPiece.rep.equals("l")) {
+            board.isOn = false;
+            if (player1) {
+                System.out.println("Player 1 wins!");
+            }
+            else {
+                System.out.println("Player 2 wins!");
+            }
+        }
+    }
+
+    public Integer genStates(Integer depth, State state, Boolean isP1) {
+
+        int bestValue;
+        if (isP1 == player1) 
+            bestValue = Integer.MIN_VALUE;
+        else
+            bestValue = Integer.MAX_VALUE;
+
+        if (depth == 0) {
+            return state.valState();
+        }
         Square[][] grid = state.grid;
         HashMap<String, Integer> p1extra = state.extraPiecesP1;
         HashMap<String, Integer> p2extra = state.extraPiecesP2;
@@ -64,11 +137,24 @@ public class AI extends Player{
                             //place piece on grid
                             grid[i][j].setPiece(newPiece);
                             p1extra = remPiece(p1extra, pieceRep);
-                            //PRINT!!
-                            printStuff(grid);
                             State curState = new State(grid, p1extra, p2extra);
-                            curState.valState();
-                            //revert
+
+                            int val = genStates(depth-1, curState, !isP1);
+                            if (isP1 == player1) {
+                                if ((val > bestValue) && depth == level) {
+                                    xStart = -1;
+                                    yStart = -1;
+                                    xEnd = j;
+                                    yEnd = i;
+                                    finalRep = pieceRep;
+
+                                }
+                                bestValue = Math.max(val, bestValue);
+                            }
+                            else {
+                                bestValue = Math.min(val, bestValue);
+                            }
+
                             p1extra = addingPiece(p1extra, pieceRep);
                             Piece defPiece = new Piece(true, ".");
                             grid[i][j].setPiece(defPiece);
@@ -85,6 +171,21 @@ public class AI extends Player{
                             grid[i][j].setPiece(newPiece);
                             p2extra = remPiece(p2extra, pieceRep);
                             //do whatever with state here!!!!!!!!
+                            State curState = new State(grid, p1extra, p2extra);
+                            int val = genStates(depth-1, curState, isP1);
+                            if (isP1 == player1) {
+                                if ((val > bestValue) && depth == level) {
+                                    xStart = -1;
+                                    yStart = -1;
+                                    xEnd = j;
+                                    yEnd = i;
+                                    finalRep = pieceRep;
+                                }
+                                bestValue = Math.max(val, bestValue);
+                            }
+                            else {
+                                bestValue = Math.min(val, bestValue);
+                            }
                             p2extra = addingPiece(p2extra, pieceRep);
                             Piece defPiece = new Piece(true, ".");
                             grid[i][j].setPiece(defPiece);
@@ -105,9 +206,24 @@ public class AI extends Player{
                             grid[curPos.y][curPos.x].setPiece(curPiece);
                             Piece defPiece = new Piece(true, ".");
                             grid[i][j].setPiece(defPiece);
-                            State newState = new State(grid, p1extra, p2extra);
-                            newState.valState();
-                            printStuff(grid);
+                            //newState.valState();
+                            State curState = new State(grid, p1extra, p2extra);
+                          //!!!!!!!  genStates(depth-1, newState, !isP1);
+                            int val = genStates(depth-1, curState, !isP1);
+                            if (isP1 == player1) {
+                                if ((val > bestValue) && depth == level) {
+                                    xStart = j;
+                                    yStart = i;
+                                    xEnd = curPos.x;
+                                    yEnd = curPos.y;
+                                    finalRep = curPiece.rep;
+                                }
+                                bestValue = Math.max(val, bestValue);
+                            }
+                            else {
+                                bestValue = Math.min(val, bestValue);
+                            }
+                            
                             grid[i][j].setPiece(curPiece);
                             grid[curPos.y][curPos.x].setPiece(endPiece);
                         }
@@ -124,8 +240,23 @@ public class AI extends Player{
                                 addingPiece(p2extra, endPiece.getRep());
                             //ADD STATE
                             State newState = new State(grid, p1extra, p2extra);
-                            newState.valState();
-                            printStuff(grid);
+                            //newState.valState();
+                            int val = genStates(depth-1, newState, !isP1);
+                            if (isP1 == player1) {
+                                if ((val > bestValue) && depth == level) {
+                                    xStart = j;
+                                    yStart = i;
+                                    xEnd = curPos.x;
+                                    yEnd = curPos.y;
+                                    finalRep = curPiece.rep;
+                            
+                                }
+                                bestValue = Math.max(val, bestValue);
+                            }
+                            else {
+                                bestValue = Math.min(val, bestValue);
+                            }
+
                             //change player of endpiece
                             if (endPiece.player1)
                                 remPiece(p1extra, endPiece.getRep());
@@ -139,15 +270,8 @@ public class AI extends Player{
                 }
             }
         }
+        this.bestValue = bestValue;
+        return bestValue;
     }
 
-    public void printStuff(Square[][] grid) {
-        for (int y = 0; y < 4; y++) {
-            for (int x = 0; x < 3; x ++) {
-                System.out.print(grid[y][x].getPieceRep()+ " ");
-            }
-            System.out.print('\n');
-        }
-        System.out.print('\n');
-    }
 }
