@@ -3,16 +3,30 @@ import java.util.Scanner;
 
 public class Human extends Player{
 
-    public Human(boolean player1){
-        super(player1);
+    
+
+    public Human(boolean player1, boolean human){
+        super(player1, human);
     }
 
     @Override
-    public void nextMove(Board board, Scanner scanner) {
+    public void nextMove(Board board, Scanner scanner, HashMap<String, Integer> extra1, HashMap<String, Integer> extra2) {
+        if (player1)
+            System.out.println("Player 1, it's your turn!");
+        else
+            System.out.println("Player 2, it's your turn!");
+
+        System.out.println("Type 'help' anytime if you forgot how the pieces move.");
 
         String s = scanner.nextLine();
 
         while (true) {
+            if (s.equals("help")) {
+                System.out.println('\n');
+                displayMoves();
+                s = scanner.nextLine();
+                System.out.println('\n');
+            }
             while (s.length() != 5) {
                 System.out.println("Please format your move correctly.");
                 s = scanner.nextLine();
