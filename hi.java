@@ -62,6 +62,9 @@ public class WalkSAT {
     */
     public static int numFlips = 0;
 
+    /**
+     * The method gets the user input for the file path, p, max cpu time 
+     */
     public static void main(String[] args) {
         //get the file path
         System.out.println("Enter the file path:");
@@ -116,6 +119,10 @@ public class WalkSAT {
         scanner.close();
         runTests();
     }
+
+    /**
+     * Initializes the clauses, false clauses and starts running the algorithm
+     */
     public static void runTests() {
         createContainingClauses();
         //determine false clauses
@@ -139,6 +146,9 @@ public class WalkSAT {
         }
     }
 
+    /**
+     * this method reads through the file and processes the clauses
+     */
     public static Integer readInput(String filePath) {
         File file = new File(filePath);
         try (Scanner inputStream = new Scanner(file);) {
@@ -203,6 +213,9 @@ public class WalkSAT {
         }
     }
 
+    /**
+     * Sets the truth state for the variables
+     */
     public static void setTruth() {
         // assign random truth value to each variable and add to hashmap 
         for (int i = 1; i <= numVar; i++) {
@@ -213,6 +226,9 @@ public class WalkSAT {
         } 
     }
 
+    /**
+     * WalkSAT algorithm, tries to satisfy all the clauses  
+     */
     public static void SATloop() {
         //CPU time used so far
         curTime = System.currentTimeMillis() - startTime;
@@ -236,12 +252,19 @@ public class WalkSAT {
         }
     }
 
+    /**
+     * Randomly selects a false clause
+     * @return a false clause
+     */
     public static ArrayList<Integer> pickClause(){
         Random rand = new Random();
         int index = rand.nextInt(falseClauses.size());
         return falseClauses.get(index);
     }
 
+     /**
+     * Determines which clauses belong to each literal and saves the data in a hashmap
+     */
     public static void createContainingClauses() {
         //iterate through clauses
         for (int i = 0; i < clauses.size(); i++) {
@@ -266,6 +289,9 @@ public class WalkSAT {
         }
     }
 
+     /**
+     * Determines which clauses are false
+     */
     public static void setFalseClauses() {
         for (int i = 0; i < clauses.size(); i++) {
             //iterate through clausea
@@ -289,6 +315,9 @@ public class WalkSAT {
         }
     }
 
+     /**
+     * Flips a variable v
+     */
     public static void flip(int v) {
         //increment numFlips
         numFlips += 1;
@@ -328,6 +357,11 @@ public class WalkSAT {
     }
 
 
+     /**
+     * Picks a variable to be flipped from a false clause
+     * @param curClause the current false clause, from which a variable is to be selected
+     * @return the variable to be flipped 
+     */
     public static int pickVar(ArrayList<Integer> curClause) {
         int res = Integer.MIN_VALUE;
         int finalVar = 0;
